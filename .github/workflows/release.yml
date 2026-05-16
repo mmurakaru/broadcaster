@@ -28,6 +28,7 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+          registry-url: https://registry.npmjs.org
 
       - run: pnpm install --frozen-lockfile
 
@@ -46,14 +47,18 @@ jobs:
 
       - name: Tag and create GitHub Release
         if: steps.changesets.outputs.hasChangesets == 'false'
+        id: tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           VERSION=$(node -p "require('./package.json').version")
           TAG="v$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "$TAG already exists, skipping"
+            echo "created=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           if [ -f CHANGELOG.md ]; then
@@ -65,3 +70,11 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
           printf '%s\n' "$BODY" | gh release create "$TAG" --title "$TAG" --notes-file -
+          echo "created=true" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to npm
+        if: steps.tag.outputs.created == 'true' && env.NPM_TOKEN != ''
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm publish --access public --no-git-checks

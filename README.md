@@ -8,47 +8,78 @@ See [`PRD.md`](../notes/projects/broadcaster/PRD.md) for the full spec.
 
 ## Status
 
-**v0.1 - M1 scaffold.** Rooms + generic pub/sub work end-to-end. Mailboxes (M2) and blackboard (M3) are stubbed.
+**v0.2 - rooms + generic pub/sub, ships as `npx`.** Mailboxes (M2) and blackboard (M3) are stubbed.
 
-## Install
+## Install (one line)
 
-Prerequisites:
-- macOS or Linux
-- [Redis](https://redis.io/) running locally
-- Node 24+ (uses native TypeScript via `--experimental-strip-types`)
-- [`pnpm`](https://pnpm.io/)
+```sh
+npx -y broadcaster-mcp install
+```
 
-```bash
+That command:
+1. Detects whether Redis is reachable; if not, offers to install via Homebrew (macOS) or start it in a Docker container (anywhere with Docker).
+2. Registers `broadcaster` as a user-scope MCP entry in Claude Code via `claude mcp add`.
+3. Runs `doctor` to confirm everything's wired up.
+
+Pass `--yes` (or `-y`) to skip the prompts (useful in CI / dotfile setup scripts).
+
+Then open Claude Code in a fresh tab and ask it to `room_join "kitchen"` and `room_broadcast "kitchen" { "msg": "hello" }`. Open a second tab and `room_history "kitchen"` to see it.
+
+### Other subcommands
+
+```sh
+npx -y broadcaster-mcp doctor      # check Redis connectivity + MCP entry status
+npx -y broadcaster-mcp uninstall   # remove MCP entry; optionally stop Docker Redis
+npx -y broadcaster-mcp --version   # print version
+npx -y broadcaster-mcp --help      # full usage
+```
+
+### Setting agent names per tab
+
+By default every Claude tab spawned via `npx -y broadcaster-mcp` gets the same agent name (`hostname-pid`), which means the live tail filters out cross-tab messages incorrectly. To get a stable identity per tab, set `BROADCASTER_AGENT` in your shell before launching `claude`, or register separate per-name MCP entries:
+
+```sh
+claude mcp add broadcaster-alice --scope user -e BROADCASTER_AGENT=alice -- npx -y broadcaster-mcp
+claude mcp add broadcaster-bob   --scope user -e BROADCASTER_AGENT=bob   -- npx -y broadcaster-mcp
+```
+
+<details>
+<summary>Manual install (without the `install` subcommand)</summary>
+
+If you'd rather not let the installer touch your system:
+
+1. Install Redis yourself:
+   ```sh
+   brew install redis && brew services start redis
+   # or:
+   docker run -d --name broadcaster-redis -p 6379:6379 redis:7-alpine
+   ```
+2. Register the MCP entry:
+   ```sh
+   claude mcp add broadcaster --scope user -- npx -y broadcaster-mcp
+   ```
+3. Verify:
+   ```sh
+   npx -y broadcaster-mcp doctor
+   ```
+
+</details>
+
+<details>
+<summary>Local dev (cloning the repo)</summary>
+
+```sh
 brew install redis node@24 pnpm
 brew services start redis
 
-git clone <this-repo> broadcaster
+git clone https://github.com/mmurakaru/broadcaster
 cd broadcaster
 pnpm install
 pnpm test
+pnpm dev        # start the MCP server on stdio
 ```
 
-## Add to Claude Code
-
-Append the following to `~/.claude/settings.json` (per terminal tab, set a unique `BROADCASTER_AGENT`):
-
-```json
-{
-  "mcpServers": {
-    "broadcaster": {
-      "command": "node",
-      "args": [
-        "--experimental-strip-types",
-        "--no-warnings=ExperimentalWarning",
-        "/absolute/path/to/broadcaster/src/index.ts"
-      ],
-      "env": { "BROADCASTER_AGENT": "alice" }
-    }
-  }
-}
-```
-
-Set a **different** `BROADCASTER_AGENT` in each terminal tab - that's how rooms know who's talking.
+</details>
 
 ## Tool surface
 
@@ -114,7 +145,7 @@ The `bc:v1:` prefix is the schema version - we bump it (`bc:v2:`, ...) for break
 
 ## Development
 
-```bash
+```sh
 pnpm install
 pnpm test           # vitest
 pnpm typecheck      # tsc --noEmit
@@ -124,10 +155,10 @@ pnpm dev            # start the MCP server on stdio (Ctrl-C to exit)
 
 Watch traffic on Redis with:
 
-```bash
+```sh
 redis-cli MONITOR
 ```
 
 ## License
 
-MIT
+MIT - see [LICENSE](./LICENSE).

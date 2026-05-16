@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "description": "Local MCP server giving Claude Code sessions shared rooms, pub/sub, blackboard, and mailboxes backed by Redis.",
   "type": "module",
-  "private": true,
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "broadcaster-mcp": "./bin/broadcaster-mcp.js"
   },
@@ -22,6 +25,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src tests",
+    "prepublishOnly": "pnpm test",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "changeset publish"

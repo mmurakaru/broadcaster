@@ -21,6 +21,13 @@ export default [
     }
   },
   {
+    // CLI subcommands use stdout to talk to the user; relax `no-console`.
+    files: ["src/cli/**/*.ts", "src/index.ts"],
+    rules: {
+      "no-console": "off"
+    }
+  },
+  {
     ignores: ["node_modules/", "dist/", "bin/"]
   }
 ];

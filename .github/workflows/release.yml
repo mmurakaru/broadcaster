@@ -1,20 +1,19 @@
-name: CI / Release
+name: Release
 
 on:
   push:
     branches: [main]
-  pull_request:
 
 permissions:
   contents: write
   pull-requests: write
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -32,12 +31,10 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm typecheck
-      - run: pnpm lint
+      # Release gate: don't tag a broken build
       - run: pnpm test
 
       - name: Open Version Packages PR (changesets)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: changesets
         uses: changesets/action@v1
         with:
@@ -48,7 +45,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Tag and create GitHub Release
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.changesets.outputs.hasChangesets == 'false'
+        if: steps.changesets.outputs.hasChangesets == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

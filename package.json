@@ -1,0 +1,55 @@
+{
+  "name": "broadcaster-mcp",
+  "version": "0.1.0",
+  "description": "Local MCP server giving Claude Code sessions shared rooms, pub/sub, blackboard, and mailboxes backed by Redis.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "broadcaster-mcp": "./bin/broadcaster-mcp.js"
+  },
+  "files": [
+    "src",
+    "bin",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node --experimental-strip-types --no-warnings=ExperimentalWarning src/index.ts",
+    "start": "node --experimental-strip-types --no-warnings=ExperimentalWarning src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "changeset publish"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "ioredis": "^5.4.1",
+    "ulid": "^2.3.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.31.0",
+    "@types/ioredis-mock": "^8.2.7",
+    "@types/node": "^22.10.2",
+    "@typescript-eslint/eslint-plugin": "^8.18.1",
+    "@typescript-eslint/parser": "^8.18.1",
+    "eslint": "^9.17.0",
+    "ioredis-mock": "^8.9.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "keywords": [
+    "mcp",
+    "claude-code",
+    "redis",
+    "pubsub",
+    "rooms",
+    "agent-coordination"
+  ],
+  "license": "MIT"
+}

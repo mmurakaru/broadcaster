@@ -1,6 +1,6 @@
 {
   "name": "broadcaster-mcp",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Local MCP server giving Claude Code sessions shared rooms, pub/sub, blackboard, and mailboxes backed by Redis.",
   "type": "module",
   "private": true,
